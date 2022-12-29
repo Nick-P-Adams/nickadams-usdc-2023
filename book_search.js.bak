@@ -27,14 +27,41 @@
     };
 	var resultsIndex = 0;
 	
+	/** 
+	* First iteration of this procedure did not account for hyphenated word breaks.
+	* Below I have added some code to account for the hyphenated word breaks.
+	* If a seperate line contains a portion of the searchTerm then I will return both lines 
+	* as seperate entries to the Results array in output.
+	*/
 	for(var i=0; i < scannedTextObj.length; i++) {
 		for(var k=0; k < scannedTextObj[i]["Content"].length; k++) {
-			if(scannedTextObj[i]["Content"][k]["Text"].includes(searchTerm)) {
+			currentText = scannedTextObj[i]["Content"][k]["Text"]
+			currentTextLastIndex = (scannedTextObj[i]["Content"][k]["Text"].length - 1)
+			
+			if(currentText.includes(searchTerm)) {
 				result["SearchTerm"] = searchTerm;
 				result["Results"][resultsIndex] = {"ISBN": scannedTextObj[i]["ISBN"], 
 												   "Page": scannedTextObj[i]["Content"][k]["Page"], 
 												   "Line": scannedTextObj[i]["Content"][k]["Line"]};
 				resultsIndex++;
+			}
+			else if(currentText[currentTextLastIndex] === "-") {
+				wordEnd = scannedTextObj[i]["Content"][k+1]["Text"].split(" ")[0];
+				currentText = currentText.substr(0, currentTextLastIndex) + wordEnd;
+				
+				if(currentText.includes(searchTerm)) {
+					result["SearchTerm"] = searchTerm;
+					result["Results"][resultsIndex] = {"ISBN": scannedTextObj[i]["ISBN"], 
+													   "Page": scannedTextObj[i]["Content"][k]["Page"], 
+												       "Line": scannedTextObj[i]["Content"][k]["Line"]};
+					resultsIndex++;
+					
+					result["SearchTerm"] = searchTerm;
+					result["Results"][resultsIndex] = {"ISBN": scannedTextObj[i]["ISBN"], 
+													   "Page": scannedTextObj[i]["Content"][k+1]["Page"], 
+												       "Line": scannedTextObj[i]["Content"][k+1]["Line"]};
+					resultsIndex++;
+				}
 			}
 		}
 	}
@@ -42,6 +69,8 @@
 	console.log(result);
     return result; 
 }
+
+/** TESTING OBJECTS BELOW */
 
 /** Example input object. */
 const twentyLeaguesIn = [
@@ -52,7 +81,7 @@ const twentyLeaguesIn = [
             {
                 "Page": 31,
                 "Line": 8,
-                "Text": "now simply went on by her own momentum.  The dark-"
+                "Text": "now simply went on by her own momentum. The dark-"
             },
             {
                 "Page": 31,
@@ -80,6 +109,23 @@ const twentyLeaguesOut = {
     ]
 }
 
+/** Example output object */
+const hyphenatedTwentyLeaguesOut = {
+    "SearchTerm": "darkness",
+    "Results": [
+        {
+            "ISBN": "9780000528531",
+            "Page": 31,
+            "Line": 8
+        },
+		{
+            "ISBN": "9780000528531",
+            "Page": 31,
+            "Line": 9
+        }
+    ]
+}
+
 /*
  _   _ _   _ ___ _____   _____ _____ ____ _____ ____  
 | | | | \ | |_ _|_   _| |_   _| ____/ ___|_   _/ ___| 
@@ -95,6 +141,8 @@ const twentyLeaguesOut = {
  * 
  * Please add your unit tests below.
  * */
+ 
+/** POSITIVE UNIT TESTS */
 
 /** We can check that, given a known input, we get a known output. */
 const test1result = findSearchTermInBooks("the", twentyLeaguesIn);
@@ -115,3 +163,17 @@ if (test2result.Results.length == 1) {
     console.log("Expected:", twentyLeaguesOut.Results.length);
     console.log("Received:", test2result.Results.length);
 }
+
+/** Unit test for verifying the handling of hyphenated word breaks */
+const test3result = findSearchTermInBooks("darkness", twentyLeaguesIn); 
+if (JSON.stringify(hyphenatedTwentyLeaguesOut) === JSON.stringify(test3result)) {
+    console.log("PASS: Test 3");
+} else {
+    console.log("FAIL: Test 3");
+    console.log("Expected:", hyphenatedTwentyLeaguesOut);
+    console.log("Received:", test3result);
+}
+
+/** NEGATIVE UNIT TESTS */
+
+/** CASE-SENSITIVE UNIT TESTS */
