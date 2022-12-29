@@ -19,63 +19,54 @@
  * @returns {JSON} - Search results.
  * */ 
  function findSearchTermInBooks(searchTerm, scannedTextObj) {
-    /** You will need to implement your search and 
-     * return the appropriate object here. */
+	/* ensuring our search term is always of string data type */
+	searchTerm = searchTerm.toString();
+	
 	var result = {
-        "SearchTerm": "",
+        "SearchTerm": searchTerm,
         "Results": []
     };
-	
 	/** Number of book objects in the scannedTextObj argument */
 	var bookCount = scannedTextObj.length;
 	
-	/** 
-	* searchTerm will be the same regardless of whether or not there is a hyphenated word break.
-	* Therefore, I will add it to results here before the remaining logic. 
-	*/
-	result["SearchTerm"] = searchTerm;
-	
-	/** 
-	* First iteration of this procedure did not account for hyphenated word breaks.
-	* Below I have added some code to account for the hyphenated word breaks.
-	* If a seperate line contains a portion of the searchTerm then I will return both lines 
-	* as seperate entries to the Results array in output.
-	*/
-	
-	for(var i=0; i < bookCount; i++) {
-		/** Storing the relevant book level information as we iterate over each book object. i.e. isbn and content entry count */
-		var isbn = scannedTextObj[i]["ISBN"]
-		var contentCount = scannedTextObj[i]["Content"].length
-		
-		for(var k=0; k < contentCount; k++) {
-			/** Storing the current line of text for the content as well as the last char to check for hyphenated word breaks */
-			var currentText = scannedTextObj[i]["Content"][k]["Text"]
-			var lastChar = currentText[currentText.length - 1]
+	if(bookCount != 0 && Object.keys(scannedTextObj[0]).length !== 0) {
+		for(var i=0; i < bookCount; i++) {
+			/** Storing the relevant book level information as we iterate over each book object. i.e. isbn and content entry count */
+			var currentBook = scannedTextObj[i];
+			var isbn = currentBook["ISBN"];
 			
-			/** Storing the relevant book content information as we iterate over each piece of content */
-			var page = scannedTextObj[i]["Content"][k]["Page"]
-			var line = scannedTextObj[i]["Content"][k]["Line"]
+			var bookContent = currentBook["Content"];
+			var contentCount = bookContent.length;
 			
-			if(currentText.includes(searchTerm)) {
-				result["Results"].push(formatResults(isbn, page, line)); 
-			}
-			else if(lastChar === "-") {
-				/**
-				* Since a hyphenated word break was detected I will grab the end of the word from the next line.
-				* Next the end of the word will be concatenated right before the hyphen to make the word whole again. 
-				* Then we can check to see if the searchTerm is indeed in the text.
-				* If it is we then add both lines to the result.
-				*/
-				var wordEnd = scannedTextObj[i]["Content"][k+1]["Text"].split(" ")[0];
-				var currentText = currentText.substr(0, currentText.length - 1) + wordEnd;
-				
-				/** Storing relevant information just incase the hyphenated word was or was a part of the searchTerm */
-				var nextPage = scannedTextObj[i]["Content"][k+1]["Page"];
-				var nextLine = scannedTextObj[i]["Content"][k+1]["Line"];
-				
-				if(currentText.includes(searchTerm)) {
-					result["Results"].push(formatResults(isbn, page, line));
-					result["Results"].push(formatResults(isbn, nextPage, nextLine))
+			if(contentCount != 0 && Object.keys(bookContent[0]).length !== 0) {
+				for(var k=0; k < contentCount; k++) {
+					/** Storing the current line of text for the content as well as the last char to check for hyphenated word breaks */
+					var currentText = bookContent[k]["Text"];
+					var lastChar = currentText[currentText.length - 1];
+					/** Storing the relevant book content information as we iterate over each piece of content */
+					var page = bookContent[k]["Page"];
+					var line = bookContent[k]["Line"];
+					
+					if(currentText.includes(searchTerm)) {
+						pushResults(result["Results"], formatResults(isbn, page, line)); 
+					}
+					else if(lastChar === "-" && k < (contentCount - 1)) {
+						/**
+						* Since a hyphenated word break was detected I will grab the end of the word from the next line.
+						* Next the end of the word will be concatenated right before the hyphen to make the word whole again. 
+						* Then we can check to see if the searchTerm is indeed in the text.
+						* If it is we then add both lines to the result.
+						*/
+						var wordEnd = scannedTextObj[i]["Content"][k+1]["Text"].split(" ")[0];
+						var updatedText = currentText.substr(0, currentText.length - 1) + wordEnd;
+						var nextPage = bookContent[k+1]["Page"];
+						var nextLine = bookContent[k+1]["Line"];
+						
+						if(updatedText.includes(searchTerm)) {
+							pushResults(result["Results"], formatResults(isbn, page, line));
+							pushResults(result["Results"], formatResults(isbn, nextPage, nextLine));
+						}
+					}
 				}
 			}
 		}
@@ -86,9 +77,7 @@
 }
 
 /** 
-* After the first two iterations I got the functionality I wanted out of the code.
-* However, the code is not very readable and there is lots of duplicate code. 
-* Below you will find helper functions which I refactored the code into to make the whole thing more readable. 
+* Below is where I plan to put helper functions to make the code more readable. 
 */
 
 function formatResults(isbn, page, line) {
@@ -97,9 +86,25 @@ function formatResults(isbn, page, line) {
 			"Line": line};
 }
 
+function pushResults(resultArray, object) {
+	if(!(JSON.stringify(resultArray).includes(JSON.stringify(object)))) {
+		resultArray.push(object);
+	}
+}
+
 /** TESTING OBJECTS BELOW */
 
 /** Example input object. */
+const zeroBooksIn = []
+const zeroBooksEmptyObjectIn = [{}]
+const twentyLeaguesZeroContentIn =  [
+    {
+        "Title": "Twenty Thousand Leagues Under the Sea",
+        "ISBN": "9780000528531",
+        "Content": [] 
+    }
+]
+
 const twentyLeaguesIn = [
     {
         "Title": "Twenty Thousand Leagues Under the Sea",
@@ -199,6 +204,36 @@ if (JSON.stringify(hyphenatedTwentyLeaguesOut) === JSON.stringify(test3result)) 
     console.log("FAIL: Test 3");
     console.log("Expected:", hyphenatedTwentyLeaguesOut);
     console.log("Received:", test3result);
+}
+
+/** Unit test to verify correct results should we have 0 books in the input JSON */
+const test4result = findSearchTermInBooks("the", zeroBooksIn); 
+if (test4result.Results.length == 0) {
+    console.log("PASS: Test 4");
+} else {
+    console.log("FAIL: Test 4");
+    console.log("Expected:", 0);
+    console.log("Received:", test4result.Results.length);
+}
+
+/** Unit test to verify correct results should we have 0 books as well as an empty object for input JSON */
+const test5result = findSearchTermInBooks("the", zeroBooksEmptyObjectIn); 
+if (test5result.Results.length == 0) {
+    console.log("PASS: Test 5");
+} else {
+    console.log("FAIL: Test 5");
+    console.log("Expected:", 0);
+    console.log("Received:", test5result.Results.length);
+}
+
+/** Unit test to verify correct results if there are books but no content in the input JSON */
+const test6result = findSearchTermInBooks("the", twentyLeaguesZeroContentIn); 
+if (test6result.Results.length == 0) {
+    console.log("PASS: Test 6");
+} else {
+    console.log("FAIL: Test 6");
+    console.log("Expected:", 0);
+    console.log("Received:", test6result.Results.length);
 }
 
 /** NEGATIVE UNIT TESTS */

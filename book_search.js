@@ -39,6 +39,7 @@
 			var contentCount = bookContent.length;
 			
 			if(contentCount != 0 && Object.keys(bookContent[0]).length !== 0) {
+				//console.log("In Content");
 				for(var k=0; k < contentCount; k++) {
 					/** Storing the current line of text for the content as well as the last char to check for hyphenated word breaks */
 					var currentText = bookContent[k]["Text"];
@@ -47,7 +48,7 @@
 					var page = bookContent[k]["Page"];
 					var line = bookContent[k]["Line"];
 					
-					if(currentText.includes(searchTerm)) {
+					if(currentText.includes(searchTerm) || searchTerm.includes(currentText)) {
 						pushResults(result["Results"], formatResults(isbn, page, line)); 
 					}
 					else if(lastChar === "-" && k < (contentCount - 1)) {
@@ -62,7 +63,7 @@
 						var nextPage = bookContent[k+1]["Page"];
 						var nextLine = bookContent[k+1]["Line"];
 						
-						if(updatedText.includes(searchTerm)) {
+						if(updatedText.includes(searchTerm) || searchTerm.includes(updatedText)) {
 							pushResults(result["Results"], formatResults(isbn, page, line));
 							pushResults(result["Results"], formatResults(isbn, nextPage, nextLine));
 						}
@@ -72,7 +73,7 @@
 		}
 	}
 	
-	console.log(result);
+	//console.log(result);
     return result; 
 }
 
@@ -80,12 +81,14 @@
 * Below is where I plan to put helper functions to make the code more readable. 
 */
 
+/** This function is for formatting the results into a javaScript Object */
 function formatResults(isbn, page, line) {
 	return {"ISBN": isbn, 
 			"Page": page, 
 			"Line": line};
 }
 
+/** This function checks if the object exists in the resultArray first. If it does not then the object is appended to the array. */
 function pushResults(resultArray, object) {
 	if(!(JSON.stringify(resultArray).includes(JSON.stringify(object)))) {
 		resultArray.push(object);
@@ -93,6 +96,9 @@ function pushResults(resultArray, object) {
 }
 
 /** TESTING OBJECTS BELOW */
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// IN OBJECTS
 
 /** Example input object. */
 const zeroBooksIn = []
@@ -102,6 +108,22 @@ const twentyLeaguesZeroContentIn =  [
         "Title": "Twenty Thousand Leagues Under the Sea",
         "ISBN": "9780000528531",
         "Content": [] 
+    }
+]
+
+const twentyLeaguesContentWrongDataTypeIn =  [
+    {
+        "Title": "Twenty Thousand Leagues Under the Sea",
+        "ISBN": "9780000528531",
+        "Content": [9, 10, 11] 
+    }
+]
+
+const twentyLeaguesContentEmptyObjectIn =  [
+    {
+        "Title": "Twenty Thousand Leagues Under the Sea",
+        "ISBN": "9780000528531",
+        "Content": [{}] 
     }
 ]
 
@@ -118,7 +140,7 @@ const twentyLeaguesIn = [
             {
                 "Page": 31,
                 "Line": 9,
-                "Text": "ness was then profound; and however good the Canadian\'s"
+                "Text": "ness was then profound; and however good the Canadian\'s "
             },
             {
                 "Page": 31,
@@ -128,7 +150,105 @@ const twentyLeaguesIn = [
         ] 
     }
 ]
-    
+
+const twentyLeaguesWrongDataTypeIn = [
+    {
+        "Title": "Twenty Thousand Leagues Under the Sea",
+        "ISBN": "9780000528531",
+        "Content": [
+            {
+                "Page": 31,
+                "Line": 8,
+                "Text": "now simply went on by her own momentum. The dark-"
+            },
+            {
+                "Page": 31,
+                "Line": 9,
+                "Text": "ness was then profound; and however good the Canadian\'s 9"
+            },
+            {
+                "Page": 31,
+                "Line": 10,
+                "Text": "127.0 eyes were, I asked myself how he had managed to see, and"
+            } 
+        ] 
+    }
+]
+
+const multiBookIn = [
+    {
+        "Title": "Twenty Thousand Leagues Under the Sea",
+        "ISBN": "9780000528531",
+        "Content": [
+            {
+                "Page": 31,
+                "Line": 8,
+                "Text": "now simply went on by her own momentum. The dark-"
+            },
+            {
+                "Page": 31,
+                "Line": 9,
+                "Text": "ness was then profound; and however good the Canadian\'s "
+            },
+            {
+                "Page": 31,
+                "Line": 10,
+                "Text": "eyes were, I asked myself how he had managed to see, and"
+            } 
+        ] 
+    },
+	{
+        "Title": "The Ship Who Sang",
+        "ISBN": "9780345334312",
+        "Content": [
+            {
+                "Page": 1,
+                "Line": 6,
+                "Text": "The electro-encephalogram was entirely favorable, unexpectedly so, and the"
+            },
+            {
+                "Page": 1,
+                "Line": 7,
+                "Text": "news was brought to the waiting, grieving parents. There was the final, harsh"
+            },
+            {
+                "Page": 1,
+                "Line": 8,
+                "Text": "decision: to give their child euthanasia or permit it to become an encapsulated"
+            },
+			{
+                "Page": 1,
+                "Line": 9,
+                "Text": "‘brain,’ a guiding mechanism in any one of a number of curious professions. As"
+            } 
+        ] 
+    },
+	{
+        "Title": "Do Androids Dream of Electric Sheep",
+        "ISBN": "9780752864303",
+        "Content": [
+            {
+                "Page": 9,
+                "Line": 6,
+                "Text": "The visual image congealed; he saw at once a famous landscape, the old, brown, barren"
+            },
+            {
+                "Page": 9,
+                "Line": 7,
+                "Text": "ascent, with tufts of dried-out bonelike weeds poking slantedly into a dim and sunless sky."
+            },
+            {
+                "Page": 9,
+                "Line": 8,
+                "Text": "One single figure, more or less human in form, toiled its way up the hillside: an elderly man"
+            }
+        ] 
+    }
+]
+   
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// OUT OBJECTS
+   
 /** Example output object */
 const twentyLeaguesOut = {
     "SearchTerm": "the",
@@ -141,7 +261,58 @@ const twentyLeaguesOut = {
     ]
 }
 
-/** Example output object */
+const twentyLeaguesAlternateOut = {
+    "SearchTerm": "The",
+    "Results": [
+        {
+            "ISBN": "9780000528531",
+            "Page": 31,
+            "Line": 8
+        }
+    ]
+}
+
+const multiBookOut = {
+    "SearchTerm": "the",
+    "Results": [
+        {
+            "ISBN": "9780000528531",
+            "Page": 31,
+            "Line": 9
+        },
+		{
+            "ISBN": "9780345334312",
+            "Page": 1,
+            "Line": 6
+        },
+		{
+            "ISBN": "9780345334312",
+            "Page": 1,
+            "Line": 7
+        },
+		{
+            "ISBN": "9780345334312",
+            "Page": 1,
+            "Line": 8
+        },
+		{
+            "ISBN": "9780752864303",
+            "Page": 9,
+            "Line": 6
+        },
+		{
+            "ISBN": "9780752864303",
+            "Page": 9,
+            "Line": 8
+        }
+    ]
+}
+
+const twentyLeaguesDarknessOut = {
+    "SearchTerm": "Darkness",
+    "Results": []
+}
+
 const hyphenatedTwentyLeaguesOut = {
     "SearchTerm": "darkness",
     "Results": [
@@ -154,6 +325,27 @@ const hyphenatedTwentyLeaguesOut = {
             "ISBN": "9780000528531",
             "Page": 31,
             "Line": 9
+        }
+    ]
+}
+
+const multilineTwentyLeaguesOut = {
+    "SearchTerm": "now simply went on by her own momentum. The darkness was then profound; and however good the Canadian's eyes were, I asked myself how he had managed to see, and",
+    "Results": [
+        {
+            "ISBN": "9780000528531",
+            "Page": 31,
+            "Line": 8
+        },
+		{
+            "ISBN": "9780000528531",
+            "Page": 31,
+            "Line": 9
+        },
+		{
+            "ISBN": "9780000528531",
+            "Page": 31,
+            "Line": 10
         }
     ]
 }
@@ -173,7 +365,7 @@ const hyphenatedTwentyLeaguesOut = {
  * 
  * Please add your unit tests below.
  * */
- 
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 /** POSITIVE UNIT TESTS */
 
 /** We can check that, given a known input, we get a known output. */
@@ -196,38 +388,38 @@ if (test2result.Results.length == 1) {
     console.log("Received:", test2result.Results.length);
 }
 
-/** Unit test for verifying the handling of hyphenated word breaks */
-const test3result = findSearchTermInBooks("darkness", twentyLeaguesIn); 
-if (JSON.stringify(hyphenatedTwentyLeaguesOut) === JSON.stringify(test3result)) {
+/** Unit test to verify correct results across multiple books */
+const test3result = findSearchTermInBooks("the", multiBookIn);
+if (JSON.stringify(multiBookOut) === JSON.stringify(test3result)) {
     console.log("PASS: Test 3");
 } else {
     console.log("FAIL: Test 3");
-    console.log("Expected:", hyphenatedTwentyLeaguesOut);
+    console.log("Expected:", multiBookOut);
     console.log("Received:", test3result);
 }
 
-/** Unit test to verify correct results should we have 0 books in the input JSON */
-const test4result = findSearchTermInBooks("the", zeroBooksIn); 
-if (test4result.Results.length == 0) {
+/** Unit test for verifying the handling of hyphenated word breaks */
+const test4result = findSearchTermInBooks("darkness", twentyLeaguesIn); 
+if (JSON.stringify(hyphenatedTwentyLeaguesOut) === JSON.stringify(test4result)) {
     console.log("PASS: Test 4");
 } else {
     console.log("FAIL: Test 4");
-    console.log("Expected:", 0);
-    console.log("Received:", test4result.Results.length);
+    console.log("Expected:", hyphenatedTwentyLeaguesOut);
+    console.log("Received:", test4result);
 }
 
-/** Unit test to verify correct results should we have 0 books as well as an empty object for input JSON */
-const test5result = findSearchTermInBooks("the", zeroBooksEmptyObjectIn); 
-if (test5result.Results.length == 0) {
+/** Unit test to verify correct results if given all the text in the twenty leagues book object. */
+const test5result = findSearchTermInBooks("now simply went on by her own momentum. The darkness was then profound; and however good the Canadian's eyes were, I asked myself how he had managed to see, and", twentyLeaguesIn); 
+if (JSON.stringify(multilineTwentyLeaguesOut) === JSON.stringify(test5result)) {
     console.log("PASS: Test 5");
 } else {
     console.log("FAIL: Test 5");
-    console.log("Expected:", 0);
-    console.log("Received:", test5result.Results.length);
+    console.log("Expected:", multilineTwentyLeaguesOut);
+    console.log("Received:", test5result);
 }
 
-/** Unit test to verify correct results if there are books but no content in the input JSON */
-const test6result = findSearchTermInBooks("the", twentyLeaguesZeroContentIn); 
+/** Unit test to verify correct results should we have 0 books in the input JSON */
+const test6result = findSearchTermInBooks("the", zeroBooksIn); 
 if (test6result.Results.length == 0) {
     console.log("PASS: Test 6");
 } else {
@@ -236,6 +428,98 @@ if (test6result.Results.length == 0) {
     console.log("Received:", test6result.Results.length);
 }
 
+/** Unit test to verify correct results if there are books but no content in the input JSON */
+const test7result = findSearchTermInBooks("the", twentyLeaguesZeroContentIn); 
+if (test7result.Results.length == 0) {
+    console.log("PASS: Test 7");
+} else {
+    console.log("FAIL: Test 7");
+    console.log("Expected:", 0);
+    console.log("Received:", test7result.Results.length);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 /** NEGATIVE UNIT TESTS */
 
+/** Unit test to verify correct results should we have 0 books as well as an empty object for input JSON */
+const test8result = findSearchTermInBooks("the", zeroBooksEmptyObjectIn); 
+if (test8result.Results.length == 0) {
+    console.log("PASS: Test 8");
+} else {
+    console.log("FAIL: Test 8");
+    console.log("Expected:", 0);
+    console.log("Received:", test8result.Results.length);
+}
+
+/** Unit test to verify correct results should we have a book but only and empty object in content. */
+const test9result = findSearchTermInBooks("the", twentyLeaguesContentEmptyObjectIn); 
+if (test9result.Results.length == 0) {
+    console.log("PASS: Test 9");
+} else {
+    console.log("FAIL: Test 9");
+    console.log("Expected:", 0);
+    console.log("Received:", test9result.Results.length);
+}
+
+/** Unit test to verify correct results when given a int and the number does not exist in the content. */
+const test10result = findSearchTermInBooks(9, twentyLeaguesIn); 
+if (test10result.Results.length == 0) {
+    console.log("PASS: Test 10");
+} else {
+    console.log("FAIL: Test 10");
+    console.log("Expected:", 0);
+    console.log("Received:", test10result.Results.length);
+}
+
+/** Unit test to verify correct results when given a float and the number does not exist in the content. */
+const test11result = findSearchTermInBooks(127.0, twentyLeaguesIn); 
+if (test11result.Results.length == 0) {
+    console.log("PASS: Test 11");
+} else {
+    console.log("FAIL: Test 11");
+    console.log("Expected:", 0);
+    console.log("Received:", test11result.Results.length);
+}
+
+/** Unit test to verify correct results when given a int and the number does exist in the content. */
+const test12result = findSearchTermInBooks(9, twentyLeaguesWrongDataTypeIn); 
+if (test12result.Results.length == 1) {
+    console.log("PASS: Test 12");
+} else {
+    console.log("FAIL: Test 12");
+    console.log("Expected:", 1);
+    console.log("Received:", test12result.Results.length);
+}
+
+/** Unit test to verify correct results when a books Content array contains the wrong datatype */
+const test13result = findSearchTermInBooks("the", twentyLeaguesContentWrongDataTypeIn); 
+if (test13result.Results.length == 0) {
+    console.log("PASS: Test 13");
+} else {
+    console.log("FAIL: Test 13");
+    console.log("Expected:", 0);
+    console.log("Received:", test13result.Results.length);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 /** CASE-SENSITIVE UNIT TESTS */
+
+/** Unit test to make sure the correct results are returned when searchTerm is capitolized. */
+const test14result = findSearchTermInBooks("The", twentyLeaguesIn);
+if (JSON.stringify(twentyLeaguesAlternateOut) === JSON.stringify(test14result)) {
+    console.log("PASS: Test 14");
+} else {
+    console.log("FAIL: Test 14");
+    console.log("Expected:", twentyLeaguesAlternateOut);
+    console.log("Received:", test14result);
+}
+
+/** Unit test to verify correct results for capitolized searchTerm when only the lower case version exists in the content. */
+const test15result = findSearchTermInBooks("Darkness", twentyLeaguesIn);
+if (JSON.stringify(twentyLeaguesDarknessOut) === JSON.stringify(test15result)) {
+    console.log("PASS: Test 15");
+} else {
+    console.log("FAIL: Test 15");
+    console.log("Expected:", twentyLeaguesDarknessOut);
+    console.log("Received:", test15result);
+}
