@@ -21,12 +21,25 @@
  function findSearchTermInBooks(searchTerm, scannedTextObj) {
     /** You will need to implement your search and 
      * return the appropriate object here. */
-
-    var result = {
+	var result = {
         "SearchTerm": "",
         "Results": []
     };
-    
+	var resultsIndex = 0;
+	
+	for(var i=0; i < scannedTextObj.length; i++) {
+		for(var k=0; k < scannedTextObj[i]["Content"].length; k++) {
+			if(scannedTextObj[i]["Content"][k]["Text"].includes(searchTerm)) {
+				result["SearchTerm"] = searchTerm;
+				result["Results"][resultsIndex] = {"ISBN": scannedTextObj[i]["ISBN"], 
+												   "Page": scannedTextObj[i]["Content"][k]["Page"], 
+												   "Line": scannedTextObj[i]["Content"][k]["Line"]};
+				resultsIndex++;
+			}
+		}
+	}
+	
+	console.log(result);
     return result; 
 }
 
